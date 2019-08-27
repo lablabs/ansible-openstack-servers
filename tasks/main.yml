@@ -1,0 +1,112 @@
+---
+# This role needs following input variables to properly work.
+#
+# Input:
+#
+# Required
+#   openstack_server_ssh_name: SSH keypair name for Openstack
+#   openstack_server_key_path: Local path to public key
+#   openstack_server_prefix: Server name prefix final name will be prefix-instance_num
+#   openstack_server_image: Glance image name/uuid
+#   openstack_server_network: OS network name to boot server in
+#
+# Optional:
+#   openstack_server_flavor:
+#   openstack_server_num_of_instances:
+#   openstack_server_host_groups: Groups to add server to, comma separated
+#   openstack_server_wait_for_ssh:
+#   openstack_server_wait_seconds:
+#   openstack_server_user:
+#   openstack_server_az
+#
+# Output:
+# openstack_server_hosts: Is returned array from os_server
+
+- name: Check for any missing arguments
+  assert:
+    that:
+      - openstack_server_prefix is defined
+      - openstack_server_ssh_name is defined
+      - openstack_server_key_path is defined
+      - openstack_server_image is defined
+      # - openstack_server_network is defined
+      - openstack_server_az is defined
+
+- name: Create keypair
+  os_keypair:
+    cloud: "{{ openstack_cloud | default(omit) }}"
+    auth: "{{ openstack_auth | default(omit) }}"
+    verify: "{{ openstack_ssl_verify | default(true) }}"
+    name: "{{ openstack_server_ssh_name }}"
+    public_key: "{{ lookup('file', '{{ openstack_server_key_path }}') }}"
+    state: present
+
+# - name: Create VRRP VIP Openstack Port
+#  os_port:
+#    cloud: "{{ openstack_cloud | default(omit) }}"
+#    network: "{{ openstack_mqtt_network_id }}"
+#    name: "{{ openstack_server_prefix }}-port-{{ item }}"
+#    fixed_ips:
+#      - subnet_id: "{{ openstack_mqtt_subnet_id }}"
+#    state: present
+#  register: iot_port
+# - debug: var=iot_port
+
+- name: Launch instances
+  os_server:
+    cloud: "{{ openstack_cloud | default(omit) }}"
+    auth: "{{ openstack_auth | default(omit) }}"
+    verify: "{{ openstack_ssl_verify | default(true) }}"
+    name: "{{ openstack_server_name | default (openstack_server_prefix + '-' + item )}}"
+    availability_zone: "{{ openstack_server_az }}"
+    flavor: "{{ openstack_server_flavor }}"
+    image: "{{ openstack_server_image }}"
+    key_name: "{{ openstack_server_ssh_name }}"
+    security_groups: "{{ openstack_server_security_group | default('internal') }}"
+    nics:
+      - net-name: "{{ openstack_server_network }}"
+      # - port-id: "{{ iot_port.id }}"
+    state: present
+    timeout: 400
+    wait: true
+    auto_ip: true
+    meta:
+      groups: "{{ openstack_server_host_groups }}"
+  register: openstack_server_hosts
+  with_sequence: start=1 end="{{ openstack_server_num_of_instances }}"
+
+#
+# ansible_ssh_private_key_file will set key path used to ssh into a host.
+#
+- name: Add created hosts into groups
+  add_host:
+    hostname: '{{ item.openstack.name }}'
+    ansible_ssh_host: '{{ item.openstack.interface_ip }}'
+    ansible_ssh_port: 22
+    ansible_ssh_user: "{{ openstack_server_user }}"
+    ansible_ssh_private_key_file: '~/.ssh/cra/{{ ((openstack_server_key_path|basename) |splitext).0 }}'
+    groups: '{{ openstack_server_host_groups }}'
+  when:
+    - openstack_server_host_groups is defined
+    - not ansible_check_mode
+  with_items:
+    - '{{ openstack_server_hosts.results }}'
+
+- name: Wait for servers
+  wait_for:
+    host: "{{ item.openstack.accessIPv4 }}"
+    port: 22
+    timeout: 120
+    search_regex: OpenSSH
+  with_items:
+    - "{{ openstack_server_hosts.results }}"
+  when:
+    - openstack_server_wait_for_ssh
+    - not ansible_check_mode
+
+- name: Wait for servers fixed time
+  pause:
+    seconds: "{{ openstack_server_wait_seconds | int }}"
+  when:
+    - openstack_server_wait_seconds is defined
+    - not ansible_check_mode
