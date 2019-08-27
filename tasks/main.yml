@@ -67,9 +67,9 @@
       - net-name: "{{ openstack_server_network }}"
       # - port-id: "{{ iot_port.id }}"
     state: present
-    timeout: 400
-    wait: true
-    auto_ip: true
+    timeout: "{{ openstack_server_timeout }}"
+    wait: "{{ openstack_server_wait }}"
+    auto_ip: "{{ openstack_server_auto_ip }}"
     meta:
       groups: "{{ openstack_server_host_groups }}"
   register: openstack_server_hosts
