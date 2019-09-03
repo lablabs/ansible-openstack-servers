@@ -85,11 +85,13 @@
 - name: Add created hosts into groups
   add_host:
     hostname: '{{ openstack_server_host.openstack.name }}'
+    ansible_hostname: '{{ openstack_server_host.openstack.name }}'
     ansible_ssh_host: '{{ openstack_server_host.openstack.interface_ip }}'
     ansible_ssh_port: 22
     ansible_ssh_user: "{{ openstack_server_user }}"
     ansible_ssh_private_key_file: '~/.ssh/cra/{{ ((openstack_server_key_path | basename) | splitext).0 }}'
     ansible_python_interpreter: '{{ openstack_server_ansible_python }}'
+    inventory_dir: '{{ inventory_dir }}'
     groups: '{{ openstack_server_host_groups }}'
   when:
     - openstack_server_host_groups is defined
