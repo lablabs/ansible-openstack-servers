@@ -86,16 +86,19 @@
   add_host:
     hostname: '{{ openstack_server_host.openstack.name }}'
     ansible_hostname: '{{ openstack_server_host.openstack.name }}'
-    ansible_ssh_host: '{{ openstack_server_host.openstack.interface_ip }}'
+    ansible_ssh_host: '{{ openstack_server_host.openstack.interface_ip or openstack_server_host.openstack.private_v4 }}'
     ansible_ssh_port: 22
     ansible_ssh_user: "{{ openstack_server_user }}"
     ansible_ssh_private_key_file: "{{ openstack_server_ssh_private_key_file }}"
     ansible_python_interpreter: '{{ openstack_server_ansible_python }}'
     inventory_dir: '{{ inventory_dir }}'
     groups: '{{ openstack_server_host_groups }}'
+  register: _inventory_host
   when:
     - openstack_server_host_groups is defined
     - not ansible_check_mode
+
+- debug: var=_inventory_host
 
 - name: Wait for servers
   wait_for:
