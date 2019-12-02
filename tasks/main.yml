@@ -17,7 +17,9 @@
 #   openstack_server_wait_for_ssh:
 #   openstack_server_wait_seconds:
 #   openstack_server_user:
-#   openstack_server_az
+#   openstack_server_az:
+#   openstack_server_group_name:
+#   openstack_server_group_policies:
 #
 # Output:
 # openstack_server_host: Is returned array from os_server
@@ -57,6 +59,22 @@
 - set_fact: _os_server_net_name="{{ [{"net-name":openstack_server_network}] }}"
   when: openstack_server_network is defined
 
+- name: Create server groups
+  os_server_group:
+    cloud: "{{ openstack_cloud | default(omit) }}"
+    auth: "{{ openstack_auth | default(omit) }}"
+    verify: "{{ openstack_ssl_verify | default(true) }}"
+    name: "{{ openstack_server_group_name }}"
+    policies: "{{ openstack_server_group_policies }}"
+    state: present
+  when: openstack_server_group_name is defined and openstack_server_group_name|length > 0
+  register: _os_server_group
+
+- set_fact:
+    _os_server_group_id:
+      group: "{{ _os_server_group.id }}"
+  when: _os_server_group.id is defined
+
 - name: Launch instances
   os_server:
     cloud: "{{ openstack_cloud | default(omit) }}"
@@ -69,6 +87,7 @@
     key_name: "{{ openstack_server_ssh_name }}"
     security_groups: "{{ openstack_server_security_group | default('internal') }}"
     nics: "{{ _os_server_net_name|default([]) + _os_server_port_ids|default([]) }}"
+   scheduler_hints: "{{ _os_server_group_id | default({}) }}"
     state: present
     timeout: "{{ openstack_server_timeout }}"
     wait: "{{ openstack_server_wait }}"
