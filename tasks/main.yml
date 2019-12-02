@@ -87,7 +87,7 @@
     key_name: "{{ openstack_server_ssh_name }}"
     security_groups: "{{ openstack_server_security_group | default('internal') }}"
     nics: "{{ _os_server_net_name|default([]) + _os_server_port_ids|default([]) }}"
-   scheduler_hints: "{{ _os_server_group_id | default({}) }}"
+    scheduler_hints: "{{ _os_server_group_id | default({}) }}"
     state: present
     timeout: "{{ openstack_server_timeout }}"
     wait: "{{ openstack_server_wait }}"
