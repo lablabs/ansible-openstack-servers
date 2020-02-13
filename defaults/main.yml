@@ -5,7 +5,7 @@ openstack_server_key_path: ""
 openstack_server_prefix: ""
 openstack_server_image: ""
 
-openstack_server_flavor: lb.small
+openstack_server_flavor: small
 openstack_server_num_of_instances: 2
 openstack_server_host_groups: all
 openstack_server_wait_for_ssh: true
