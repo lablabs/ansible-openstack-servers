@@ -93,8 +93,7 @@
     timeout: "{{ openstack_server_timeout }}"
     wait: "{{ openstack_server_wait }}"
     auto_ip: "{{ openstack_server_auto_ip }}"
-    meta:
-      groups: "{{ openstack_server_host_groups }}"
+    meta: "{{ openstack_server_metadata }}"
   register: openstack_server_host
 
 - debug: var=openstack_server_host
