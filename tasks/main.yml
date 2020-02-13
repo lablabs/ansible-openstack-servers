@@ -51,8 +51,7 @@
     security_groups: "{{ item.security_groups | default([]) }}"
     state: present
   when: openstack_server_network_ports is defined and openstack_server_network_ports|length > 0
-  loop:
-    - "{{ openstack_server_network_ports }}"
+  loop: "{{ openstack_server_network_ports }}"
   register: _os_ports
 
 - set_fact: _os_server_port_ids="{{ _os_ports.results | map('json_query', '{"port-id":port.id}') | list }}"
