@@ -1,10 +1,10 @@
 ---
 galaxy_info:
-  author: Jakub Jursa
+  author: Jakub Jursa, Martin Dojcak
   description: Role for managing Openstack servers
-  company: Ceske Radiokomunikacie a.s.
+  company: Labyrinth Labs s.r.o.
   license: MIT
-  min_ansible_version: 1.2
+  min_ansible_version: 2.5
   platforms:
     - name: Ubuntu
       versions:
