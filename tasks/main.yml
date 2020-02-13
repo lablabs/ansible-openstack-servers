@@ -51,7 +51,7 @@
     security_groups: "{{ item.security_groups | default([]) }}"
     state: present
   when: openstack_server_network_ports is defined and openstack_server_network_ports|length > 0
-  with_items:
+  loop:
     - "{{ openstack_server_network_ports }}"
   register: _os_ports
 
@@ -96,16 +96,22 @@
     meta: "{{ openstack_server_metadata }}"
   register: openstack_server_host
 
-- debug: var=openstack_server_host
+#- debug: var=openstack_server_host
 
-#
-# ansible_ssh_private_key_file will set key path used to ssh into a host.
-#
+# Get IP from "primary" network defined as openstack_server_network
+- set_fact:
+    _ssh_host: "{{ openstack_server_host.openstack.addresses[openstack_server_network][0].addr }}"
+  when: openstack_server_network in openstack_server_host.openstack.addresses
+
+- set_fact:
+    _ssh_host: "{{ openstack_server_host.openstack.interface_ip or openstack_server_host.openstack.private_v4 }}"
+  when: openstack_server_network not in openstack_server_host.openstack.addresses
+
 - name: Add created hosts into groups
   add_host:
     hostname: '{{ openstack_server_host.openstack.name }}'
     ansible_hostname: '{{ openstack_server_host.openstack.name }}'
-    ansible_ssh_host: '{{ openstack_server_host.openstack.interface_ip or openstack_server_host.openstack.private_v4 }}'
+    ansible_ssh_host: "{{ _ssh_host }}"
     ansible_ssh_port: 22
     ansible_ssh_user: "{{ openstack_server_user }}"
     ansible_ssh_private_key_file: "{{ openstack_server_ssh_private_key_file }}"
@@ -114,14 +120,12 @@
     groups: '{{ openstack_server_host_groups }}'
   register: _inventory_host
   when:
-    - openstack_server_host_groups is defined
+    - openstack_server_host_groups is defined and openstack_server_host_groups|length > 0
     - not ansible_check_mode
-
-- debug: var=_inventory_host
 
 - name: Wait for servers
   wait_for:
-    host: "{{ openstack_server_host.openstack.accessIPv4 }}"
+    host: "{{ _ssh_host }}"
     port: 22
     timeout: "{{ openstack_server_wait_ssh_timeout }}"
     search_regex: OpenSSH
