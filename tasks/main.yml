@@ -48,6 +48,7 @@
     cloud: "{{ openstack_cloud | default(omit) }}"
     network: "{{ item.network }}"
     name: "{{ openstack_server_name }}-port-{{ item.name }}"
+    security_groups: "{{ item.security_groups | default([]) }}"
     state: present
   when: openstack_server_network_ports is defined and openstack_server_network_ports|length > 0
   with_items:
