@@ -123,7 +123,7 @@
   wait_for:
     host: "{{ openstack_server_host.openstack.accessIPv4 }}"
     port: 22
-    timeout: 120
+    timeout: "{{ openstack_server_wait_ssh_timeout }}"
     search_regex: OpenSSH
   when:
     - openstack_server_wait_for_ssh
