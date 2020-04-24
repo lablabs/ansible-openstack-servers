@@ -101,11 +101,20 @@
 # Get IP from "primary" network defined as openstack_server_network
 - set_fact:
     _ssh_host: "{{ openstack_server_host.openstack.addresses[openstack_server_network][0].addr }}"
-  when: openstack_server_network in openstack_server_host.openstack.addresses
+  when:
+    - openstack_server_network is defined
+    - openstack_server_network in openstack_server_host.openstack.addresses
 
 - set_fact:
     _ssh_host: "{{ openstack_server_host.openstack.interface_ip or openstack_server_host.openstack.private_v4 }}"
-  when: openstack_server_network not in openstack_server_host.openstack.addresses
+  when:
+    - openstack_server_network is defined
+    - openstack_server_network not in openstack_server_host.openstack.addresses
+
+- set_fact:
+    _ssh_host: "{{ openstack_server_host.openstack.private_v4 }}"
+  when:
+    - openstack_server_network is not defined
 
 - name: Add created hosts into groups
   add_host:
