@@ -46,13 +46,14 @@
 - name: Create Openstack Ports
   os_port:
     cloud: "{{ openstack_cloud | default(omit) }}"
-    network: "{{ item.network }}"
-    name: "{{ openstack_server_name }}-port-{{ item.name }}"
-    security_groups: "{{ item.security_groups | default([]) }}"
+    network: "{{ port.network }}"
+    name: "{{ openstack_server_name }}-port-{{ port.name }}"
     state: present
     allowed_address_pairs: "{{ openstack_allowed_address_pairs }}"
   when: openstack_server_network_ports is defined and openstack_server_network_ports|length > 0
   loop: "{{ openstack_server_network_ports }}"
+  loop_control:
+    loop_var: port
   register: _os_ports
 
 - set_fact: _os_server_port_ids="{{ _os_ports.results | map('json_query', '{"port-id":port.id}') | list }}"
