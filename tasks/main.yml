@@ -56,7 +56,7 @@
     loop_var: port
   register: _os_ports
 
-- set_fact: _os_server_port_ids="{{ _os_ports.results | map('json_query', '{"port-id":port.id}') | list }}"
+- set_fact: _os_server_port_ids="{{ _os_ports.results | map('json_query', '{"port-id":id}') | list }}"
   when: _os_ports.results is defined
 - set_fact: _os_server_net_name="{{ [{"net-name":openstack_server_network}] }}"
   when: openstack_server_network is defined
