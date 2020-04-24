@@ -49,7 +49,7 @@
     network: "{{ port.network }}"
     name: "{{ openstack_server_name }}-port-{{ port.name }}"
     state: present
-    allowed_address_pairs: "{{ openstack_allowed_address_pairs }}"
+    allowed_address_pairs: "{{ port.allowed_address_pairs | default([]) }}"
   when: openstack_server_network_ports is defined and openstack_server_network_ports|length > 0
   loop: "{{ openstack_server_network_ports }}"
   loop_control:
