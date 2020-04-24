@@ -50,6 +50,7 @@
     name: "{{ openstack_server_name }}-port-{{ item.name }}"
     security_groups: "{{ item.security_groups | default([]) }}"
     state: present
+    allowed_address_pairs: "{{ openstack_allowed_address_pairs }}"
   when: openstack_server_network_ports is defined and openstack_server_network_ports|length > 0
   loop: "{{ openstack_server_network_ports }}"
   register: _os_ports
